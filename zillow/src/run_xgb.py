@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import pandas as pd
 import xgboost as xgb
@@ -5,9 +8,10 @@ import gc
 
 print('Loading data ...')
 
-train = pd.read_csv('../input/train_2016_v2.csv')
-prop = pd.read_csv('../input/properties_2016.csv')
-sample = pd.read_csv('../input/sample_submission.csv')
+input_dir = './'
+train = pd.read_csv(input_dir + '../input/train_2016_v2.csv')
+prop = pd.read_csv(input_dir + '../input/properties_2016.csv')
+sample = pd.read_csv(input_dir + '../input/sample_submission.csv')
 
 print('Binding to float32')
 
@@ -77,7 +81,7 @@ p_test = clf.predict(d_test)
 
 del d_test; gc.collect()
 
-sub = pd.read_csv('../input/sample_submission.csv')
+sub = pd.read_csv(input_dir + '../input/sample_submission.csv')
 for c in sub.columns[sub.columns != 'ParcelId']:
     sub[c] = p_test
 
