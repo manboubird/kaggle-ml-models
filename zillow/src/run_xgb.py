@@ -35,8 +35,11 @@ print('Loading data ...')
 train, prop, sample = [ load_data_file("%s/%s.p" % (INPUT_DIR, x), "%s/%s" % (INPUT_DIR, x)) for x in [TRAIN_CSV, PROP_CSV, SAMPLE_CSV] ]
 
 
-print('Creating training set ...')
+print('Feature engineering ...')
+prop['bedfullbathratio'] = prop['bedroomcnt'] / prop['fullbathcnt']
 
+
+print('Creating training set ...')
 df_train = train.merge(prop, how='left', on='parcelid')
 
 x_train = df_train.drop(['parcelid', 'logerror', 'transactiondate', 'propertyzoningdesc', 'propertycountylandusecode'], axis=1)
@@ -53,15 +56,15 @@ del df_train; gc.collect()
 split = 80000
 x_train, y_train, x_valid, y_valid = x_train[:split], y_train[:split], x_train[split:], y_train[split:]
 
-print('Building DMatrix...')
 
+print('Building DMatrix...')
 d_train = xgb.DMatrix(x_train, label=y_train)
 d_valid = xgb.DMatrix(x_valid, label=y_valid)
 
 del x_train, x_valid; gc.collect()
 
-print('Training ...')
 
+print('Training ...')
 params = {}
 params['eta'] = 0.02
 params['objective'] = 'reg:linear'
@@ -74,8 +77,8 @@ clf = xgb.train(params, d_train, 10000, watchlist, early_stopping_rounds=100, ve
 
 del d_train, d_valid
 
-print('Building test set ...')
 
+print('Building test set ...')
 sample['parcelid'] = sample['ParcelId']
 df_test = sample.merge(prop, on='parcelid', how='left')
 
@@ -91,8 +94,8 @@ d_test = xgb.DMatrix(x_test)
 
 del x_test; gc.collect()
 
-print('Predicting on test ...')
 
+print('Predicting on test ...')
 p_test = clf.predict(d_test)
 
 del d_test; gc.collect()
