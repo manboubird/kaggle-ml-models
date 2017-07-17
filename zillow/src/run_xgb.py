@@ -1,23 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import numpy as np
 import pandas as pd
 import xgboost as xgb
 import gc
 
+def load_data_file(pickle_path, csv_file):
+    v = None
+    if os.path.exists(pickle_path):
+        print('Loading pickled file: ' + pickle_path)
+        v = pd.read_pickle(pickle_path)
+    else:
+        print('Loading csv file: ' + csv_file)
+        v = pd.read_csv(csv_file)
+        for c, dtype in zip(v.columns, v.dtypes):
+            if dtype == np.float64:
+                print('Convert float64 to float32: ' + c)
+                v[c] = v[c].astype(np.float32)
+        print('Saveing as pickled file: ' + pickle_path)
+        v.to_pickle(pickle_path)
+    return v 
+
+
+INPUT_DIR = './input'
+
+TRAIN_CSV = 'train_2016_v2.csv'
+PROP_CSV = 'properties_2016.csv'
+SAMPLE_CSV = 'sample_submission.csv'
+RESULT_CSV = 'xgb_starter.csv'
+
 print('Loading data ...')
+train, prop, sample = [ load_data_file("%s/%s.p" % (INPUT_DIR, x), "%s/%s" % (INPUT_DIR, x)) for x in [TRAIN_CSV, PROP_CSV, SAMPLE_CSV] ]
 
-input_dir = './'
-train = pd.read_csv(input_dir + '../input/train_2016_v2.csv')
-prop = pd.read_csv(input_dir + '../input/properties_2016.csv')
-sample = pd.read_csv(input_dir + '../input/sample_submission.csv')
-
-print('Binding to float32')
-
-for c, dtype in zip(prop.columns, prop.dtypes):
-	if dtype == np.float64:
-		prop[c] = prop[c].astype(np.float32)
 
 print('Creating training set ...')
 
@@ -81,9 +97,9 @@ p_test = clf.predict(d_test)
 
 del d_test; gc.collect()
 
-sub = pd.read_csv(input_dir + '../input/sample_submission.csv')
+sub = pd.read_csv("%s/%s" % (INPUT_DIR, SAMPLE_CSV))
 for c in sub.columns[sub.columns != 'ParcelId']:
     sub[c] = p_test
 
-print('Writing csv ...')
-sub.to_csv('xgb_starter.csv', index=False, float_format='%.4f') # Thanks to @inversion
+print('Writing csv: ' + RESULT_CSV)
+sub.to_csv(RESULT_CSV, index=False, float_format='%.4f') # Thanks to @inversion
