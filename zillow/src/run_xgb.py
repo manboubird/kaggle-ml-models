@@ -36,13 +36,22 @@ train, prop, sample = [ load_data_file("%s/%s.p" % (INPUT_DIR, x), "%s/%s" % (IN
 
 
 print('Feature engineering ...')
-prop['bedfullbathratio'] = prop['bedroomcnt'] / prop['fullbathcnt']
+prop['bedfullbathratio'] = prop['bedroomcnt'] / prop['bathroomcnt']
+prop['garage_size_per_garage'] = prop['garagetotalsqft'] / prop['garagecarcnt']
+
+# assessmentyear_yearbuilt_diff does not improve
+# prop['assessmentyear_yearbuilt_diff'] = prop['assessmentyear'] - prop['yearbuilt']
 
 
 print('Creating training set ...')
 df_train = train.merge(prop, how='left', on='parcelid')
 
 x_train = df_train.drop(['parcelid', 'logerror', 'transactiondate', 'propertyzoningdesc', 'propertycountylandusecode'], axis=1)
+
+# drop zero correlation values (does not improve)
+# corr_zero_cols = ['assessmentyear', 'storytypeid', 'pooltypeid2', 'pooltypeid7', 'pooltypeid10', 'poolcnt', 'decktypeid', 'buildingclasstypeid']
+# x_train = x_train.drop(corr_zero_cols, axis=1)
+
 y_train = df_train['logerror'].values
 print(x_train.shape, y_train.shape)
 
